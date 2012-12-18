@@ -33,7 +33,7 @@ end
 
 the controller call location object with params (filters)
 
-in location object:
+in location class:
  (I'm assuming that there is a radius around the desired location)
   * locations get retrieved
   *  score get calculated for each location 
