@@ -6,12 +6,12 @@ define('localFSAdapter',[
     'fileDescriptor'
 
     ], function(_,FileDescriptor) {
-  
+
   var LocalFsAdapter = function() {
   /* High level implementation of a localFs client wrapper */
       console.log('LocalFsAdapter');
       };
-/* 
+/*
  LocalFsAdapter.prototype.initialize = function(host, port, protocol) {
    this.fs = new Davlib.DavFs();
    this.fs.initialize(host, port, protocol);
@@ -24,7 +24,7 @@ define('localFSAdapter',[
     initialize: function(baseDir) {
       this.enabled = ( typeof Titanium !== 'undefined');
       if(!this.enabled) { console.log('error: Titanium is not enabled');return; }
-      
+
       // filesystem paths
       this.baseDir=baseDir ||'';
       this.homeDir = this.getHomeDir();
@@ -34,7 +34,7 @@ define('localFSAdapter',[
         this.workingDir.createDirectory();
       }
     },
-   
+
     getHomeDir:function(){
       if (Titanium.Platform.getName()=="Darwin") {
        return   Titanium.Filesystem.getDocumentsDirectory();
@@ -44,21 +44,20 @@ define('localFSAdapter',[
       {
         var tmp =  Titanium.Filesystem.getDocumentsDirectory();
         tmp = tmp.nativePath();
-        //tmp =tmp.replace("Documents","My Documents");
         return Titanium.Filesystem.getFile(tmp);
       }
     },
 
     getFullPath: function(path)
     {
-      return (path);//this.workingDir.nativePath() + this.sep + path; 
+      return (path);//this.workingDir.nativePath() + this.sep + path;
     },
-    
+
     isDir: function(path,callback)
     {
          path=this._extractDir(this._normalizePath(path));
          var dir = Titanium.Filesystem.getFile(this.workingDir,path);
-         callback(dir.isDirectory()); 
+         callback(dir.isDirectory());
     },
 
     readdir : function(path,callback){
@@ -70,11 +69,11 @@ define('localFSAdapter',[
       if (!readpath.isDirectory){console.log(readpath.toString() + " not a directory");this.callback("Not Found");return;}
       this._readdir(path);
     },
-   
+
     copy : function(path,topath,callback){
       this.callback=callback;
       try
-      { 
+      {
         this.callback=callback;
         var src= Titanium.Filesystem.getFile(this.workingDir,path);
         var dest= Titanium.Filesystem.getFile(this.workingDir,topath);
@@ -101,7 +100,7 @@ define('localFSAdapter',[
     {
       var lastSep = path.lastIndexOf(this.sep);
       if (lastSep < path.length) {
-        path = path.substr(0,lastSep+1); //path end with "/"  
+        path = path.substr(0,lastSep+1); //path end with "/"
       }
       return path;
     },
@@ -151,7 +150,7 @@ define('localFSAdapter',[
         path=path.replace(/\//g,Titanium.Filesystem.getSeparator());
       }
      return path;
-                  
+
     },
 
 
@@ -159,7 +158,7 @@ define('localFSAdapter',[
       this.callback=callback;
       path=this._extractDir(this._normalizePath(path));
       try
-      { 
+      {
         var dir = Titanium.Filesystem.getFile(this.workingDir, path);
         if(!dir.exists())  {
           var dir_path = this.workingDir.toString();
@@ -186,7 +185,7 @@ define('localFSAdapter',[
       try
       {
         var file = Titanium.Filesystem.getFile(this.workingDir,path);
-        var result=file.deleteFile(); 
+        var result=file.deleteFile();
         return result? this._actionCallback():this._actionCallback("cannot delete " + path);
       }
       catch(err)
@@ -194,13 +193,13 @@ define('localFSAdapter',[
         this._actionCallback("cannot delete " + path +  ". err: " +  err.message);
       }
     },
-    
+
     rmdir: function(path,callback){
       this.callback=callback;
       try
       {
         var file = Titanium.Filesystem.getFile(this.workingDir,path);
-        var result=file.deleteDirectory(true);// true = recursive 
+        var result=file.deleteDirectory(true);// true = recursive
         return result? this._actionCallback():this._actionCallback("cannot delete " + path);
       }
       catch(err)
@@ -232,25 +231,25 @@ define('localFSAdapter',[
            if(info.isDir){self._readdir(info.path);}
          }
        });
-       if (this.recursionDepth--===0){ 
+       if (this.recursionDepth--===0){
          this.callback(null,this.treeContent);
        }
     },
     _filter:function(name)
     {
-      return (name ===".DS_Store" || name ===".Thumbs.db" || name ===".ignore"); 
+      return (name ===".DS_Store" || name ===".Thumbs.db" || name ===".ignore");
     },
     _parse: function(data)
     {
        var fd= new FileDescriptor();
        fd.name = data.name();
-       fd.path = data.nativePath().replace(this.homeDir.nativePath(),""); 
-       fd.createTimestamp =this._parseTimestamp(data.createTimestamp()); 
+       fd.path = data.nativePath().replace(this.homeDir.nativePath(),"");
+       fd.createTimestamp =this._parseTimestamp(data.createTimestamp());
        fd.lastTimestamp =this._parseTimestamp(data.modificationTimestamp());
        fd.isDir =data.isDirectory();
        fd.size= !fd.isDir? data.size():null;// null the size when dir as webdav doesn't give size info for folder;
        if (fd.isDir){fd.path+=this.sep;}
-       fd.relativePath = fd.path.replace(this.queryPath,""); 
+       fd.relativePath = fd.path.replace(this.queryPath,"");
        return fd;
      },
 

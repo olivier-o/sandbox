@@ -6,7 +6,7 @@ define('fileSync',[
     'diffScanner'
 
     ], function(_,DiffScanner) {
-  
+
   var FileSync = function() {
   /* High level implementation of a DavFs client wrapper */
     console.log('FileSync');
@@ -20,13 +20,13 @@ define('fileSync',[
       this.logger=logger;
       this.forceSync=false;//if destination is newer than source sync stop, if set to true sync continue no matter what.
     },
-    
-    //from server to localfile 
+
+    //from server to localfile
     checkOut: function(paths,forceSync,callbacks){  //source = remote; destination= local
       this._log("checkOut in: " + paths.source);
       this._prepareSync(paths,true,forceSync,callbacks);
     },
-    //from localfile to server  
+    //from localfile to server
     checkIn: function(paths,forceSync,callbacks){  //source = remote; destination= local
       this._log("checkIn in: " + paths.destination);
       this._prepareSync(paths,false,forceSync,callbacks);
@@ -64,7 +64,7 @@ define('fileSync',[
       var diffScanner = new DiffScanner({leftSide:leftSide,rightSide:rightSide});
       return diffScanner.process();
      },
-  
+
     _sync: function(syncReports,callback) {
       //this.read_errors=[];
       //this.write_errors=[];
@@ -81,11 +81,11 @@ define('fileSync',[
         else{
            this._onError('sync aborted',this._scanErrorToString(syncReports.errors));
            this._onComplete('_sync','sync aborted on scan error see log for details');
-           return; // sync is aborted 
+           return; // sync is aborted
         }
       }
       this.actions=[{run:this._syncWriteNext,items:syncReports.writables},{run:this._syncRemoveNext,items:syncReports.removables}];
-      
+
       this._syncActionNext();
      },
     _syncActionNext:function() {
@@ -108,17 +108,17 @@ define('fileSync',[
                 self._syncWriteNext();
               });
        } else {
-        
+
          var destinationPath= this.destination.getFullPath(self.syncPaths.destination +item.relativePath);
          this._checkDestinationPath(destinationPath, function(error){
               if(error){self.transfer_errors.push({item:item.path,msg:error});self._syncWriteNext();return;}
               self.shipper.transfer({origin:self.source.getFullPath(item.path),destination: destinationPath},
                                     {onError:function(error){self.transfer_errors.push({item:item.path,msg:error});self._syncWriteNext();},
-                                     onComplete:function(){self.addedCount++;self._syncWriteNext();}                 
+                                     onComplete:function(){self.addedCount++;self._syncWriteNext();}
              });
          });
         //
-        /* 
+        /*
         self.source.read(item.path,
               function(error, content){
                 if (error){self.read_errors.push(error);}
@@ -170,30 +170,27 @@ define('fileSync',[
    _syncCallback:function() {
       var errors=[];
       var errorCount=0;
-      //if (this.read_errors.length >0){errors.push(this.read_errors); alert(this.read_errors.length + " reading errors, check logs");}
-      //if (this.write_errors.length >0){errors.push(this.write_errors); alert(this.write_errors.length + " writing errors, check logs");}
       if (this.transfer_errors.length >0){this._log(this._writeErrorToString(this.transfer_errors)); errorCount+= this.transfer_errors.length;}
       if (this.remove_errors.length >0){this._log(this._removeErrorToString(this.remove_errors)); errorCount+=this.remove_errors.length;}
-      //if (errors.length===0){errors=null;}
-      
+
       this._onComplete('complete',"added: "+ this.addedCount+ ", removed: " +  this.removedCount + ", errors: " + errorCount ,{added:this.addedCount,removed:this.removedCount,errors:errorCount});//callback(errors);
     },
-   
+
     _initCallbacks:function(callbacks) {
       var onProgressCallback = callbacks.onProgress || function(){};
       var onErrorCallback = callbacks.onError || function(){};
       var onCompleteCallback = callbacks.onComplete || function(){};
       var self=this;
-      this._onProgress= function(method,msg){self._onActionLog(method,msg); onProgressCallback(msg);}; 
-      this._onError= function(method,msg){self._onActionLog(method,msg); onErrorCallback(msg);}; 
-      this._onComplete= function(method,msg,info){self._onActionLog(method,msg); onCompleteCallback(info);}; 
+      this._onProgress= function(method,msg){self._onActionLog(method,msg); onProgressCallback(msg);};
+      this._onError= function(method,msg){self._onActionLog(method,msg); onErrorCallback(msg);};
+      this._onComplete= function(method,msg,info){self._onActionLog(method,msg); onCompleteCallback(info);};
     },
 
 
     _scanErrorToString:function(errors) {
       var report="SCAN ERROR BEGIN ===\n";
       _.each(errors, function(error){
-        report+="  " + error.ref +": " + error.msg +"\n";// + "(" + error.right.lastTimestamp + ") :" + error.right.size + " != " + error.left.size +"\n"; 
+        report+="  " + error.ref +": " + error.msg +"\n";// + "(" + error.right.lastTimestamp + ") :" + error.right.size + " != " + error.left.size +"\n";
       });
       report +="=== SCAN ERROR END ===\n";
       return report;
@@ -202,7 +199,7 @@ define('fileSync',[
     _writeErrorToString:function(errors) {
       var report="WRITE ERROR BEGIN ===\n";
       _.each(errors, function(error){
-        report+="  " + error.item +": " + error.msg  +"\n"; 
+        report+="  " + error.item +": " + error.msg  +"\n";
       });
       report +="=== WRITE ERROR END ===\n";
       return report;
@@ -211,7 +208,7 @@ define('fileSync',[
   _removeErrorToString:function(errors) {
       var report="REMOVE ERROR BEGIN ===\n";
       _.each(errors, function(error){
-        report+="  " + error.item +": " + error.msg  +"\n"; 
+        report+="  " + error.item +": " + error.msg  +"\n";
       });
       report +="=== REMOVE ERROR END ===\n";
       return report;
@@ -225,4 +222,3 @@ define('fileSync',[
 
   return FileSync;
 });
-
