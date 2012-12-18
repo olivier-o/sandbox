@@ -36,6 +36,6 @@ the controller call location object with params (filters)
 in location class:
  (I'm assuming that there is a radius around the desired location)
   * locations get retrieved
-  *  score get calculated for each location 
+  *  score get calculated for each location with any filters - calculation get counpounded by each fitler 
   *  location sorted by score
   *  location returned either in json format to be consummed by a backbone.js/moustache or by plain html
