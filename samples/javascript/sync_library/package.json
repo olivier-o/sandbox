@@ -1,0 +1,24 @@
+{
+   "name": "sync_lib",
+   "version": "0.1.0",
+   "description": "Folder Synchronization library.",
+   "keywords": [
+       "file",
+       "synchronization"
+   ],
+   "bugs": {
+   },
+      "dependencies": {}
+   ,
+   "scripts": {
+       "install": "install.js",
+       "uninstall": "uninstall.js",
+       "build": "build.js",
+       "test": "test.js"
+   },
+   "directories": {
+       "lib": "lib",
+       "spec": "spec"
+   }
+}
+

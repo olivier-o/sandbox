@@ -1,0 +1,38 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+	<title>Mocha test runner</title>
+	<script src="spec/lib/browser/jquery.js" type="text/javascript"></script>
+	<link rel="stylesheet" href="spec/lib/browser/style.css"/>
+	<script type="text/javascript" src="lib/vendor/require.js"></script>
+	<script src="dist/cloudfs.min.js" type="text/javascript"></script>
+	<script type="text/javascript">
+		require(['require', 'spec/lib/chai', 'spec/lib/mocha'], function(require){
+			mocha.setup('bdd');
+/**/
+                        require(['spec/test.localFSAdapter','spec/test.davFSAdapter','spec/test.diffScanner','spec/test.fileSync'], function(localFSAdapter,davFSAdapter,diffScanner,fileSync){
+				console.log("module: ", localFSAdapter);
+				console.log("module: ", davFSAdapter);
+				console.log("module: ", diffScanner);
+				console.log("module: ", fileSync);
+				mocha.run();
+                                });
+/*
+                        	require(['../spec/test.fileSync'], function(myModule){
+			
+				console.log("module: ", myModule);
+				mocha.run();
+			});
+//*/
+		});
+	</script>
+</head>
+<body>
+	<h2><a href="runner.html">run again!</a></h2>
+	<h2><a href="grunt-runner.html">run after grunt again!</a></h2>
+	
+	<div id="mocha"></div>
+</body>
+</html>
+
+

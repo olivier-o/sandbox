@@ -1,4 +1,5 @@
-# Spatial search - reflexion on possible implementation
+Spatial search - reflexion on possible implementation
+=====================================================
 
 ## JavaScript
  lookup city and initial geolocalization with api call supported by geokit or rely on third party

@@ -1,0 +1,145 @@
+---------- css.scss extract -----------------
+
+body
+{
+background:#fff !important;
+font-family: Arial, Verdana;
+}
+ul{
+list-style: none;
+}
+
+
+$header-color:#878c8d;
+$border-color:#ffaa11;
+$dotted-color:$border-color;
+$legend-color:#3f4445;
+@mixin red-border {
+border: 1px red solid;
+}
+
+@mixin rounded-corners($radius: 5px) {
+border-radius:$radius;
+-moz-border-radius:$radius;
+-webkit-border-radius:$radius;
+
+}
+h2
+{
+color: $header-color;
+}
+---------- css.scss extract -----------------
+
+---------- javascript backbone extract -----------------
+
+Ezd.Views.Pack = Backbone.View.extend({
+  tagName:"li",  
+  initialize: function() {
+    _.bindAll(this, 'addRecipientLinks','updateMessageLink','loadDetail'); 
+    this.parent = this.options.parent;
+    },
+    
+    events: {
+        "click .pack-cmd" : "loadDetail",
+        "click .recipients-new" : "toggleRecipients",
+        "click .messages-new" : "toggleMessages"
+    },
+
+    render: function() {
+        if (_.isNull(this.model.get("message"))) 
+        {
+          this.model.set({message:{title:"New package"}});
+        }    
+        var info= this.model.toJSON();
+        var element = packItemTemplate(info);
+        $(this.el).html(element);
+        return this;
+    },
+
+---------- javascript backbone extract -----------------
+
+---------- Rails model extract -----------------
+class Event < ActiveRecord::Base
+  after_initialize :default_values
+  before_save :check_trigger?
+  after_save :do_actions?
+
+  belongs_to :user
+  has_many :events_pals 
+  has_many :pals , :through => :events_pals
+  has_many :messages, :through => :packs
+  has_many :dispatchers , :through => :events_pals, :source => :pal
+  has_many :readers, :through => :packs, :source  => :pals , :uniq => true 
+
+  has_many :packs, :dependent => :delete_all, :uniq => true
+    
+  has_many :event_activations, :dependent => :delete_all
+
+  has_one :checklist
+
+
+  accepts_nested_attributes_for :messages
+  accepts_nested_attributes_for :packs, :allow_destroy => true #, :dependent => :destroy
+
+  attr_accessible :name,  :secure_retrieval,:enable,:delay,:trigger_started, :trigger_at,:lifetime, :user_id, :pals_attributes , :dispatcher_emails , :pal_ids , :packs_attributes
+
+  attr_accessor :dispatcher_emails
+  attr_accessor :broadcast_message_ids
+  attr_accessor :broadcast_message_pal_ids
+
+
+  validates_numericality_of :delay, :greater_than_or_equal_to => 0 , :less_than_or_equal_to => 6.months / 60 
+  validates_datetime :trigger_at, :after => lambda { Time.current } , :allow_blank => true #, :after_message => "should be after present  <= #{Time.now}"
+  validates :name , :presence =>true, :uniqueness => {:scope =>'user_id'}
+
+  def messages_by_pal pal_id
+    Message.by_event_and_pal self.id, pal_id 
+  end
+
+  def readings
+    Reading.by_event self.id
+  end
+
+  def activate user_id
+    begin
+      event_requestlist = EventRequestlist.create(:user_id => user_id, :pal_id => Pal.system_pal.id, :auto_event => self)
+      event_activation = EventActivation.create(:event_id => self.id, :user_id => user_id, :pal_id => Pal.system_pal.id,:perishable_token => event_requestlist.perishable_token, :trigger_at => self.trigger_at)
+    rescue => exc
+      logger.info("Event_activation NOT_SAVED:#{exc.message}")
+    end
+    event_activation.perishable_token
+  end
+
+  def reset_trigger
+    self.trigger_at = nil
+    self.trigger_started = false
+    self.save
+  end
+
+  private 
+
+  def default_values
+    self.lifetime = 60 if self.lifetime == 0
+  end
+
+  def last_activation
+    event_activation = EventActivation.where("user_id = #{self.user_id} and event_id =#{self.id} and trigger_at is not null and trigger_at < '#{Time.now.utc.to_s(:db)}'").last
+  end
+
+  def current_activation
+    event_activation = EventActivation.where("user_id = #{self.user_id} and event_id =#{self.id} and trigger_at is not null and trigger_at >'#{Time.now.utc.to_s(:db)}'").first
+  end
+
+  def check_trigger?
+    @clear_token = nil # can be overwritten by following line
+    @must_engaged = self.new_record? ?  check_trigger_engage_for_new_record? : check_trigger_engage_for_existing_record?
+    return true # statement to ensure save will occur.
+  end
+  
+  def remove_from_trigger_queue activation_token
+    Resque.remove_delayed(EventTriggerer,activation_token)
+    event_activation = EventActivation.where(:user_id => self.user_id,:perishable_token => activation_token).first
+    event_activation.delete # remove desactivated token
+  end
+
+---------- Rails model extract -----------------
